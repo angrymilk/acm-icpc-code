@@ -1,0 +1,129 @@
+//dp[i][j][k] 表示还有个s串匹配，到了j个位置，匹配在k的位置上面是否可以
+//辛酸。wa了一晚上加一下午，这是一道好题，非常好的题。
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#define eps 0.0000000001
+#define maxn 209
+#define inf 0x3f3f3f3f
+#define mod 1000000007
+#define ll long long
+using namespace std;
+int lea,len;
+char a[maxn],s[maxn];
+int dp[maxn][maxn][maxn];
+struct ee
+{
+    char str[maxn];
+    int len;
+} q[maxn];
+
+bool cmp(ee aa,ee b)
+{
+    for(int i=1; i<=min(aa.len,b.len); i++)
+    {
+        if(aa.str[i]==b.str[i]&&i<aa.len&&i<b.len)
+            continue;
+        else if(aa.str[i]<b.str[i])
+            return aa.str[i]<b.str[i];
+        else if(b.str[i]<aa.str[i])
+            return b.str[i]<aa.str[i];
+        else if(aa.len==i)
+            return aa.len>b.len;
+        else if(b.len==i)
+            return b.len>aa.len;
+    }
+}
+
+int dfs(int nm,int st,int po)
+{
+    if(dp[nm][st][po]!=-1)
+        return dp[nm][st][po];
+    if(nm<=0)
+        return 0;
+    if(nm==1&&po==lea&&s[st-1]==a[po])
+        return dp[nm][st][po]=1;
+    if(st==len)
+    {
+        if(nm>1)
+            return dp[nm][st][po]=0;
+        if(a[po]!=s[st-1]||po!=lea)
+            return dp[nm][st][po]=0;
+        return dp[nm][st][po]=1;
+    }
+    if(po==lea)
+        if(nm>1&&dfs(nm-1,st+1,1)&&s[st-1]==a[po])
+            return dp[nm][st][po]=1;
+    else
+        if(dfs(nm,st+1,po+1)&&s[st-1]==a[po])
+            return dp[nm][st][po]=1;
+    for(int i=1; st+i*lea<=len; i++)
+        if(nm-i>=1&&dfs(nm-i,st+i*lea,po)&&dfs(i,st,1))
+            return dp[nm][st][po]=1;
+    return dp[nm][st][po]=0;
+}
+
+bool check(int u)
+{
+    bool op=false;
+    for(int i=1; i+u-1<=len; i++)
+    {
+        lea=u;
+        for(int j=i; j<=i+lea-1; j++)
+            a[j-i+1]=s[j-1];
+        bool flag=false;
+        for(int o=1,p=lea; o<=p; o++,p--)
+        {
+            if(a[o]!=a[p])
+                flag=true;
+        }
+        if(flag)
+            continue;
+        for(int ii=0; ii<=len/lea+2; ii++)
+            for(int jj=0; jj<=len+2; jj++)
+                for(int ij=0; ij<=lea+2; ij++)
+                    dp[ii][jj][ij]=-1;
+        if(dfs(len/lea,1,1)==1)
+        {
+            op=true;
+            break;
+        }
+    }
+    if(op)
+        return true;
+    else
+        return false;
+}
+
+int main()
+{
+    //freopen("d:\\in.txt","r",stdin);
+    int all=1;
+    scanf("%s",s);
+    len=strlen(s);
+    for(int i=1; i<=len; i++)
+    {
+        if(len%i)
+            continue;
+        if(check(i))
+        {
+            for(int j=1; j<=lea; j++)
+                q[all].str[j]=a[j];
+            q[all].len=lea;
+            all++;
+        }
+    }
+    sort(q+1,q+all,cmp);
+    for(int i=1; i<all; i++)
+    {
+        for(int j=1; j<=q[i].len; j++)
+            printf("%c",q[i].str[j]);
+        printf("\n");
+    }
+    return 0;
+}
