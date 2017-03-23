@@ -1,0 +1,158 @@
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#define eps 0.0000000001
+#define maxn 200009
+#define inf 0x3f3f3f3f
+#define mod 1000000007
+#define MAXN 100009
+#define ll long long
+using namespace std;
+int n,k;
+ll ans=0,an=0;
+int gcd(int a,int b)
+{
+    if(a>b)
+        swap(a,b);
+    if(b%a==0)
+        return a;
+    return gcd(b%a,a);
+}
+
+ll quickpow(ll m,int n)
+{
+    ll b = 1;
+    while (n > 0)
+    {
+        if (n & 1)
+            b = (b*m)%mod;
+        n = n >> 1 ;
+        m = (m*m)%mod;
+    }
+    return b;
+}
+
+void solve2()
+{
+    for(int u=n-k+1; u<=n; u++)
+    {
+        for(int i=1; i<(1<<(n-u+1)); i++)
+        {
+            int pre=-1,cnt=0,GCD=0,all=0,sta,al;
+            for(int j=0; (1<<j)<=i; j++)
+            {
+                if((1<<j)&i)
+                {
+                    all++;
+                    if(pre==-1)
+                    {
+                        pre=j;
+                        al=j;
+                    }
+                    else
+                    {
+                        if(GCD==0)
+                            GCD=j-pre;
+                        else
+                            GCD=gcd(GCD,j-pre);
+                        pre=j;
+                    }
+                }
+            }
+            ll add=0;
+            if(all==1)
+                add=quickpow(2,n);
+            else
+                add=quickpow(2,GCD+n-u-pre+al);
+            if(all%2)
+                ans=(ans+add+mod)%mod;
+            else
+                ans=(ans-add+mod)%mod;
+        }
+    }
+}
+
+int fa[maxn];
+int getfa(int a)
+{
+    if(fa[a]!=a)
+        return fa[a]=getfa(fa[a]);
+    else
+        return a;
+}
+
+void uni(int a,int b)
+{
+    int aa=getfa(a),bb=getfa(b);
+    if(aa!=bb)
+        fa[aa]=bb;
+}
+
+void solve1()
+{
+    for(int u=n-k+1; u<=n; u++)
+    {
+        for(int i=1; i<(1<<(n-u+1)); i++)
+        {
+            int pre=-1;
+            bool v[100];
+            int all=0;
+            memset(v,false,sizeof(v));
+            for(int j=1; j<=n; j++)
+                fa[j]=j;
+            for(int j=0; (1<<j)<=i; j++)
+            {
+                if((1<<j)&i)
+                {
+                    all++;
+                    int sta=j+1;
+                    if(pre!=-1)
+                    {
+                        for(int x=sta; x<=sta+u-1; x++)
+                        {
+                            int o=pre+x-sta;
+                            uni(x,o);
+                        }
+                    }
+                    pre=sta;
+                }
+            }
+            int cnt=0;
+            for(int ii=1; ii<=n; ii++)
+            {
+                int o=getfa(ii);
+                if(!v[o])
+                {
+                    cnt++;
+                    v[o]=true;
+                }
+            }
+            if(all%2)
+                ans=(ans+quickpow(2,cnt)+mod)%mod;
+            else
+                ans=(ans-quickpow(2,cnt)+mod)%mod;
+        }
+    }
+}
+ll p[50];
+
+int main()
+{
+    //freopen("d:\\in.txt","r",stdin);
+    //freopen("d:\\inn.txt","w",stdout);
+    ans=0;
+    scanf("%d%d",&n,&k);
+    /*
+    if(n<=35)
+        solve1();
+    else
+        */
+        solve2();
+    printf("%lld\n",ans);
+    return 0;
+}
