@@ -1,0 +1,420 @@
+/splay树模板
+//created by iabrother
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#define eps 0.0000000001
+#define maxn 300009
+#define inf 0x3f3f3f3f
+#define mod 1000000009
+#define ll long long
+using namespace std;
+
+void PushUp(int x);
+void PushDown(int x);
+int Newnode(int key, int fa); //新建一个节点并返回
+void Rotate(int x, int p); //0左旋 1右旋
+void Splay(int x, int To); //将x节点移动到To的子节点中
+int GetPth(int p, int To); //返回第p小的节点 并移动到To的子节点中
+int Find(int key); //返回值为key的节点 若无返回0 若有将其转移到根处
+int Prev(); //返回根节点的前驱
+int Succ(); //返回根结点的后继
+void Insert(int key); //插入key值
+void Delete(int key); //删除值为key的节点
+int GetRank(int key); //获得值<=key的节点个数
+void Delete(int l, int r); //删除值在[l, r]中的节点
+void output(int a);
+
+int cnt=0, rt=0,n;
+int Add[maxn];
+char ty;
+
+struct Tree
+{
+    int key, num, size, fa, son[2],ch[2];
+    char ss;
+} T[maxn];
+
+inline void PushUp(int x)
+{
+    T[x].size=T[T[x].son[0]].size+T[T[x].son[1]].size+T[x].num;
+    //printf("%d:%d  %d:%d   %d:%d\n",x,T[x].size,T[x].son[0],T[T[x].son[0]].size,T[x].son[1],T[T[x].son[1]].size);
+}
+
+inline void PushDown(int x)
+{
+    if(Add[x])
+    {
+        swap(T[x].son[0],T[x].son[1]);
+        if(T[x].son[0])
+        {
+            //T[T[x].son[0]].key+=Add[x];
+            //Add[T[x].son[0]]+=Add[x];
+            Add[T[x].son[0]]=!Add[T[x].son[0]];
+        }
+        if(T[x].son[1])
+        {
+            //T[T[x].son[1]].key+=Add[x];
+            //Add[T[x].son[1]]+=Add[x];
+            Add[T[x].son[1]]=!Add[T[x].son[1]];
+        }
+        Add[x]=0;
+    }
+}
+
+inline int Newnode(int key, int fa) //新建一个节点并返回
+{
+    ++cnt;
+    T[cnt].key=key;
+    T[cnt].ss=ty;
+    T[cnt].num=T[cnt].size=1;
+    T[cnt].fa=fa;
+    T[cnt].son[0]=T[cnt].son[1]=0;
+    T[cnt].ch[0]=T[cnt].ch[1]=0;
+    return cnt;
+}
+
+inline void Rotate(int x, int p) //0左旋 1右旋
+{
+    int y=T[x].fa;
+    PushDown(y);
+    PushDown(x);
+    T[y].son[!p]=T[x].son[p];
+    T[T[x].son[p]].fa=y;
+    T[x].fa=T[y].fa;
+    if(T[x].fa)
+        T[T[x].fa].son[T[T[x].fa].son[1] == y]=x;
+    T[y].size+=-T[x].size+T[T[x].son[p]].size;
+    T[x].son[p]=y;
+    T[y].fa=x;
+    PushUp(y);
+    PushUp(x);
+}
+
+void Splay(int x, int To) //将x节点移动到To的子节点中
+{
+    while(T[x].fa != To)
+    {
+        if(T[T[x].fa].fa == To)
+            Rotate(x, T[T[x].fa].son[0] == x);
+        else
+        {
+            int y=T[x].fa, z=T[y].fa;
+            int p=(T[z].son[0] == y);
+            if(T[y].son[p] == x)
+                Rotate(x, !p), Rotate(x, p); //之字旋
+            else
+                Rotate(y, p), Rotate(x, p); //一字旋
+        }
+    }
+    if(To == 0) rt=x;
+}
+
+int GetPth(int rt,int p, int To) //返回第p小的节点 并移动到To的子节点中
+{
+    if(!rt || p > T[rt].size) return 0;
+    if(!p)
+        return 0;
+    int x=rt;
+    while(x)
+    {
+        PushDown(x);
+        if(p >= T[T[x].son[0]].size+1 && p <= T[T[x].son[0]].size+T[x].num)
+            break;
+        if(p > T[T[x].son[0]].size+T[x].num)
+        {
+            p-=T[T[x].son[0]].size+T[x].num;
+            x=T[x].son[1];
+
+        }
+        else
+            x=T[x].son[0];
+    }
+    Splay(x, To);//根据需要判断是否进行splay
+    return x;
+}
+
+int Find(int r,int key) //返回值为key的节点 若无返回0 若有将其转移到根处
+{
+    if(!r) return 0;
+    int x=r;
+    while(x)
+    {
+        PushDown(x);
+        if(T[x].key == key) break;
+        x=T[x].son[key > T[x].key];
+    }
+    if(x) Splay(x, 0);//根据需要判断是否进行splay
+    return x;
+}
+
+int Prev() //返回根节点的前驱 非重点
+{
+    if(!rt || !T[rt].son[0]) return 0;
+    int x=T[rt].son[0];
+    while(T[x].son[1])
+    {
+        PushDown(x);
+        x=T[x].son[1];
+    }
+    Splay(x, 0);//根据需要判断是否进行splay
+    return x;
+}
+
+int Succ() //返回根结点的后继 非重点
+{
+    if(!rt || !T[rt].son[1]) return 0;
+    int x=T[rt].son[1];
+    while(T[x].son[0])
+    {
+        PushDown(x);
+        x=T[x].son[0];
+    }
+    Splay(x, 0);//根据需要判断是否进行splay
+    return x;
+}
+
+void Insert(int key) //插入key值
+{
+    if(!rt)
+        rt=Newnode(key, 0);
+    else
+    {
+        int x=rt, y=0;
+        while(x)
+        {
+            PushDown(x);
+            y=x;
+            if(T[x].key == key)
+            {
+                T[x].num++;
+                T[x].size++;
+                break;
+            }
+            T[x].size++;
+            x=T[x].son[key > T[x].key];
+        }
+        if(!x)
+            x=T[y].son[key > T[y].key]=Newnode(key, y);
+        Splay(x, 0);//根据需要判断是否进行splay
+    }
+}
+
+void Delete(int key) //删除值为key的节点1个
+{
+    int x=Find(rt,key);
+    if(!x) return;
+    if(T[x].num>1)
+    {
+        T[x].num--;
+        PushUp(x);
+        return;
+    }
+    int y=T[x].son[0];
+    while(T[y].son[1])
+        y=T[y].son[1];
+    int z=T[x].son[1];
+    while(T[z].son[0])
+        z=T[z].son[0];
+    if(!y && !z)
+    {
+        rt=0;
+        return;
+    }
+    if(!y)
+    {
+        Splay(z, 0);
+        T[z].son[0]=0;
+        PushUp(z);
+        return;
+    }
+    if(!z)
+    {
+        Splay(y, 0);
+        T[y].son[1]=0;
+        PushUp(y);
+        return;
+    }
+    Splay(y, 0);
+    Splay(z, y);
+    T[z].son[0]=0;
+    PushUp(z);
+    PushUp(y);
+}
+
+int GetRank(int key) //获得值<=key的节点个数
+{
+    if(!Find(rt,key))
+    {
+        Insert(key);
+        int tmp=T[T[rt].son[0]].size;
+        Delete(key);
+        return tmp;
+    }
+    else
+        return T[T[rt].son[0]].size+T[rt].num;
+}
+
+void Delete(int l, int r) //删除值在[l, r]中的所有节点 l!=r
+{
+    if(!Find(rt,l)) Insert(l);
+    int p=Prev();
+    if(!Find(rt,r)) Insert(r);
+    int q=Succ();
+    if(!p && !q)
+    {
+        rt=0;
+        return;
+    }
+    if(!p)
+    {
+        T[rt].son[0]=0;
+        PushUp(rt);
+        return;
+    }
+    if(!q)
+    {
+        Splay(p, 0);
+        T[rt].son[1]=0;
+        PushUp(rt);
+        return;
+    }
+    Splay(p, q);
+    T[p].son[1]=0;
+    PushUp(p);
+    PushUp(q);
+}
+//高级操作：...........................................................................................................
+//.....................................................................................................................
+//.....................................................................................................................
+//.....................................................................................................................
+int cal=0;
+
+void Split(int t, int k, int &L, int &R)    //在以t为根的树中将[1,k]分离出来，变成两棵树L和R。
+{
+    GetPth(t, k,0);
+    L=rt;
+    R=T[L].son[1];
+    T[L].son[1]=0;
+    T[L].size-=T[R].size;                     //注意分离的时候要减去子树的size
+    T[R].fa=0;
+}
+
+int Merge(int L,int R)
+{
+    int k=T[L].size;
+    GetPth(L,k,0);         //在用Splay时，必须先往下推。
+    L=rt;
+    T[L].son[1]=R;
+    T[R].fa=L;
+    T[L].size+=T[R].size;
+    return L;
+}
+
+void output(int a)
+{
+    PushDown(a);
+    if(T[a].son[0])
+        output(T[a].son[0]);
+    if(cal<n-1)
+    {
+        cal++;
+        printf("%c",T[a].ss);
+    }
+    else
+       printf("%c\n",T[a].ss);
+    if(T[a].son[1])
+        output(T[a].son[1]);
+}
+
+void call(int a,int b)   //从树中取出[a,b]然后旋转，插到尾部
+{
+    int left=0, mid=0, right=0;
+    if(a!=1 && b!=n)    //三段
+    {
+        Split(rt,  a-1, left, right);
+        Split(right, b-a+1, mid, right );
+        Add[mid]^=1;
+        rt=Merge(Merge( left, right ) , mid );
+    }
+    else if(a==1)       //中后段
+    {
+        Split(rt, b, mid, right );
+        Add[mid]^=1;
+        rt=Merge( right, mid );
+    }
+    else if(b==n)       //前中段
+    {
+        Split(rt, a-1, left, mid);
+        Add[mid]^=1;
+        rt=Merge(left, mid );
+    }
+}
+
+void Cut(int a,int b,int c) //将a,b区间里面的数字放到C后面
+{
+    int a1,a2,a3,a4;
+    int r1,r2,r3,r4;
+    if(a-1>0)
+    {
+       Split(rt,a-1,r1,a1);
+       Split(a1,b-a+1,r2,r3);
+       int temp=Merge(r1,r3);
+       if(c>0)
+       {
+            Split(temp,c,a2,a3);
+            Merge(Merge(a2,r2),a3);
+       }
+       else
+       {
+           Merge(r2,temp);
+       }
+    }
+    else
+    {
+        Split(rt,b-a+1,r1,a1);
+        if(c>0)
+        {
+           Split(a1,c,r2,a2);
+           Merge(Merge(r2,r1),a2);
+        }
+        else
+        {
+            Merge(r1,a1);
+        }
+    }
+}
+
+void Flip(int a,int b) //将区间a,b的数据翻转
+{
+      int left,mid,right;
+      if(a-1>0)
+      {
+          Split(rt,a-1,left,right);
+          int temp=left;
+          Split(right,b-a+1,mid,left);
+          Add[mid]^=1;
+          rt=Merge(Merge(temp,mid),left);
+      }
+      else
+      {
+          Split(rt,b,left,right);
+          Add[left]^=1;
+          rt=Merge(left,right);
+      }
+}
+
+//注意Find找的是key,GetPth找的是排名第几。
+//注意Split一开始左边界为0的情况。
+int aa[maxn],ab[maxn],ac[maxn];
+int main()
+{
+    //freopen("d:\\in.txt","r",stdin);
+    //freopen("d:\\in1.txt","w",stdout);
+    return 0;
+}
