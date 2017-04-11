@@ -1,0 +1,83 @@
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#define eps 0.0000000001
+#define maxn 100009
+#define inf 0x3f3f3f3f
+#define mod 1000000009
+#define ll long long
+using namespace std;
+vector<int> g[maxn];
+int n,size[maxn],root,Max,maxv[maxn],dep[maxn];
+bool vis[maxn];
+
+void dfsroot(int a,int b,int f)
+{
+	if(size[a]-size[b]>maxv[b])
+		maxv[b]=size[a]-size[b];
+	if(maxv[b]<Max)
+		Max=maxv[b],root=b;
+	for(int i=0;i<g[b].size();i++)
+	{
+		int v=g[b][i];
+		if(v==f||vis[v])
+			continue;
+		dfsroot(a,v,b);
+	}
+}
+
+void dfssize(int a,int b)
+{
+	size[a]=1;
+	maxv[a]=0;
+	for(int i=0;i<g[a].size();i++)
+	{
+		int v=g[a][i];
+		if(v==b||vis[v])
+			continue;
+		dfssize(v,a);
+		size[a]+=size[v];
+		maxv[a]=max(size[v],maxv[a]);
+	}
+}
+
+void dfs(int a,int c)
+{
+	Max=n;
+	dfssize(a,0);
+	dfsroot(a,a,0);
+	vis[root]=true;
+	dep[root]=c;
+	int yu=root;
+	for(int i=0;i<g[yu].size();i++)
+	{
+		int v=g[yu][i];
+		if(vis[v])
+			continue;
+		dfs(v,c+1);
+	}
+}
+
+int main()
+{
+	//freopen("d:\\in.txt","r",stdin);
+	memset(vis,false,sizeof(vis));
+	scanf("%d",&n);
+	for(int i=1;i<n;i++)
+	{
+		int a,b;
+		scanf("%d%d",&a,&b);
+		g[a].push_back(b);
+		g[b].push_back(a);
+	}
+	dfs(1,0);
+	for(int i=1;i<=n;i++)
+		printf("%c ",'A'+dep[i]);
+	printf("\n");
+    return 0;
+}
