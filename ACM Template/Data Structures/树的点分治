@@ -1,0 +1,150 @@
+//树分治模板
+//created by iabrother
+/*
+   算法归纳：
+   1.首先计算下面节点的size，找到重心点
+   2.计算经过这个点的路经长度为d的有多少
+   3.根据重心分割树，继续进行递归。
+*/
+
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#define eps 0.0000000001
+#define maxn 10009
+#define inf 0x3f3f3f3f
+#define mod 1000000009
+#define ll long long
+using namespace std;
+struct ee
+{
+	int v,w,next;
+}edge[maxn*2];
+int root,ans,head[maxn],tot,num,Max,N,K,size[maxn];
+int maxv[maxn];//求点的最大子树size
+int dis[maxn];//求点的距离数组
+bool vis[maxn];
+//初始化
+void init()
+{
+	memset(head,-1,sizeof(head));
+	memset(vis,false,sizeof(vis));
+	root=0;
+	ans=0;
+	tot=0;
+}
+//添加树边
+void add(int from,int to,int w)
+{
+	edge[tot].v=to;
+	edge[tot].w=w;
+	edge[tot].next=head[from];
+	head[from]=tot++;
+}
+//...........................................................................
+void dfsroot(int a,int b);
+void dfs(int a);
+int cal(int a,int b);
+void dfssubsize(int a,int b);
+void dfsdis(int a,int b,int f);
+//...........................................................................
+//求树的重心 a为上一个重心 b为目前在计算的点 c为上一个节点
+void dfsroot(int a,int b,int f)
+{
+	if(size[a]-size[b]>maxv[b])  //和这个点上面的点进行计算
+		maxv[b]=size[a]-size[b];
+	if(maxv[b]<Max)
+		Max=maxv[b],root=b;
+	for(int i=head[b];i!=-1;i=edge[i].next)
+	{
+		int v=edge[i].v;
+		if(v==f||vis[v])
+			continue;
+		dfsroot(a,v,b);
+	}
+}
+//主递归
+void dfs(int a)
+{
+	Max=N;
+	dfssubsize(a,0);
+	dfsroot(a,a,0);
+	ans+=cal(root,0);
+	vis[root]=true;
+	for(int i=head[root];i!=-1;i=edge[i].next)
+	{
+		int v=edge[i].v;
+		if(!vis[v])
+		{
+			ans-=cal(v,edge[i].w);
+			dfs(v);
+		}
+	}
+}
+//计算经过点a的树链有几条
+int cal(int a,int b)
+{
+	int ret=0;
+	num=0;
+	dfsdis(a,b,0);
+	sort(dis,dis+num);
+	int i=0,j=num-1;
+	while(i<j)
+	{
+		while(dis[i]+dis[j]>K&&i<j)
+			j--;
+		ret+=j-i;
+		i++;
+	}
+	return ret;
+}
+//求子树size大小
+void dfssubsize(int a,int b)
+{
+	size[a]=1;
+	maxv[a]=0;
+	for(int i=head[a];i!=-1;i=edge[i].next)
+	{
+		int v=edge[i].v;
+		if(vis[v]||v==b)
+			continue;
+		dfssubsize(v,a);
+		size[a]+=size[v];
+		if(size[v]>maxv[a])
+			maxv[a]=size[v];
+	}
+}
+//计算距离重心的距离 b表示离重心的距离 f表示前面一个点
+void dfsdis(int a,int b,int f)
+{
+	dis[num++]=b;
+	for(int i=head[a];i!=-1;i=edge[i].next)
+	{
+		int v=edge[i].v;
+		if(v!=f&&!vis[v])
+			dfsdis(v,b+edge[i].w,a);
+	}
+}
+
+int main()
+{
+	   //freopen("d:\\inn.txt","r",stdin);
+    //	for(int i=1;i<N;i++)
+    //	{
+    //		int a,b,c;
+    //		scanf("%d%d%d",&a,&b,&c);
+    //		add(a,b,c);
+    //		add(b,a,c);
+    //	}
+    //	dfs(1);
+      return 0;
+}
+
+
+
+
