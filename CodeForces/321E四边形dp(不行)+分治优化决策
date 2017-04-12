@@ -1,0 +1,63 @@
+//方法1：用四边形优化dp，结果T的不要不要的明明复杂度理论上是NM的，
+//我也是醉了
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#define eps 0.0000000001
+#define maxn 4009
+#define maxm 809
+#define inf 0x3f3f3f3f
+#define mod 1000000009
+#define LL long long
+using namespace std;
+int n,k,dp[maxm][maxn],suf[maxn][maxn],jue[maxm][maxn],cal[maxn][maxn];
+int main()
+{
+	//freopen("d:\\in.txt","r",stdin);
+	scanf("%d%d",&n,&k);
+	for(int i=1;i<=n;i++)
+	{
+		for(int j=1;j<=n;j++)
+		{
+			int t;
+			scanf("%d",&t);
+			suf[i][j]=suf[i][j-1]+t;
+		}
+	}
+	for(int i=1;i<=n;i++)
+	{
+		for(int j=i+1;j<=n;j++)
+		{
+			cal[i][j]=cal[i][j-1]+suf[j][j]-suf[j][i-1];
+		}
+	}
+	memset(dp,inf,sizeof(dp));
+	for(int i=1;i<=n;i++)
+	{
+		jue[1][i]=0;
+		dp[1][i]=cal[1][i];
+	}
+	for(int i=2;i<=k;i++)
+	{
+		jue[i][n+1]=n;
+		for(int j=n;j>=i;j--)
+		{
+			for(int k=jue[i-1][j];k<=jue[i][j+1]&&k<=j;k++)
+			{
+			    int t=dp[i-1][k]+cal[k+1][j];
+				if(t<dp[i][j])
+					jue[i][j]=k,dp[i][j]=t;
+			}
+		}
+	}
+	printf("%d\n",dp[k][n]);
+    return 0;
+}
+
+//方法2：用二分来进行优化的
+
