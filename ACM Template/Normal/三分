@@ -1,1 +1,19 @@
+double solve(double parameter)
+{
+    // 计算函数值，即f(x)
+}
 
+double trisection_search(double left, double right)
+{
+    // 三分搜索，找到最优解（求函数最大值下的自变量值）
+    double midl, midr;
+    while (right-left > 1e-7)
+    {
+        midl = (left + right) / 2;
+        midr = (midl + right) / 2;
+        // 如果是求最小值的话这里判<=即可
+        if(solve(midl) >= solve(midr)) right = midr;
+        else left = midl;
+    }
+    return left;
+}
