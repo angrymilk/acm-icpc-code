@@ -1,0 +1,178 @@
+#include <algorithm>
+#include <cstdio>
+#include <vector>
+#include <set>
+
+using namespace std;
+
+const int maxn = 1e5 + 10;
+
+struct Query
+{
+	vector<long long> a;
+	int sgn;
+	void sort() { ::sort(a.begin(), a.end()); }
+	long long query(long long mx)
+	{
+		long long ret = 0;
+		for (int i = 0, j = a.size(); i < a.size(); ++i)
+		{
+			while (j > 0 && a[i] + a[j - 1] > mx)
+				--j;
+			ret += j;
+		}
+		return ret * sgn;
+	}
+	void add(int delta)
+	{
+		for (auto &i : a)
+			i += delta;
+	}
+};
+
+vector<pair<int, int>> G[maxn];
+int sz[maxn];
+int mxsz[maxn];
+bool vis[maxn];
+int k[maxn];
+vector<Query> Q;
+vector<long long> V;
+
+void addquerydfs(int u, int fa, long long dis)
+{
+	Q.back().a.push_back(dis);
+	for (auto &p : G[u])
+	{
+		int v = p.first;
+		if (vis[v] || v == fa)
+			continue;
+		addquerydfs(v, u, dis + p.second);
+	}
+}
+
+void addquery(int rt, int sgn, int delta)
+{
+	Q.push_back(Query());
+	Q.back().sgn = sgn;
+	addquerydfs(rt, 0, 0);
+	Q.back().sort();
+	Q.back().add(delta);
+}
+
+vector<int> P;
+
+void findrtdfs(int u, int fa)
+{
+	P.push_back(u);
+	sz[u] = 1;
+	mxsz[u] = 0;
+	for (auto &p : G[u])
+	{
+		int v = p.first;
+		if (vis[v] || v == fa)
+			continue;
+		findrtdfs(v, u);
+		sz[u] += sz[v];
+		mxsz[u] = max(mxsz[u], sz[v]);
+	}
+}
+
+int findrt(int u)
+{
+	findrtdfs(u, 0);
+	int rt = -1;
+	for (int v : P)
+	{
+		mxsz[v] = max(mxsz[v], (int)P.size() - sz[v]);
+		if (rt == -1 || mxsz[v] < mxsz[rt])
+			rt = v;
+	}
+	P.clear();
+	return rt;
+}
+
+void precalc(int u)
+{
+	int rt = findrt(u);
+	vis[rt] = true;
+	addquery(rt, 1, 0);
+	for (auto &p : G[rt])
+		if (!vis[p.first])
+			addquery(p.first, -1, p.second);
+	for (auto &p : G[rt])
+		if (!vis[p.first])
+			precalc(p.first);
+}
+
+long long calc(long long mx)
+{
+	long long ret = 0;
+	for (auto &q : Q)
+		ret += q.query(mx);
+	return ret;
+}
+
+int tim = 0;
+
+void count(int u, long long lim)
+{
+	static multiset<long long> s;
+	int rt = findrt(u);
+	vis[rt] = true;
+	s.insert(0);
+	++tim;
+	for (auto &p : G[rt])
+	{
+		int v = p.first;
+		if (vis[v])
+			continue;
+		for (auto &a : Q[tim].a)
+			for (auto &b : s)
+				if (a + b >= lim)
+					break;
+				else
+					V.push_back(a + b);
+		for (auto &a : Q[tim].a)
+			s.insert(a);
+		++tim;
+	}
+	s.clear();
+	for (auto &p : G[rt])
+		if (!vis[p.first])
+			count(p.first, lim);
+}
+
+int main()
+{
+	int N, Q;
+	scanf("%d %d", &N, &Q);
+	long long wsum = 0;
+	for (int i = 1; i < N; ++i)
+	{
+		int u, v, w;
+		scanf("%d %d %d", &u, &v, &w);
+		G[u].emplace_back(v, w);
+		G[v].emplace_back(u, w);
+		wsum += w;
+	}
+	precalc(1);
+	for (int i = 0; i < Q; ++i)
+		scanf("%d", &k[i]);
+	int kmax = *max_element(k, k + Q);
+	long long L = 0, R = wsum;
+	while (L < R)
+	{
+		long long M = (L + R) >> 1;
+		if ((calc(M) - N) / 2 < kmax)
+			L = M + 1;
+		else
+			R = M;
+	}
+	for (int i = 1; i <= N; ++i)
+		vis[i] = false;
+	count(1, L);
+	sort(V.begin(), V.end());
+	for (int i = 0; i < Q; ++i)
+		printf("%lld\n", k[i] > V.size() ? L : V[k[i] - 1]);
+	return 0;
+}
