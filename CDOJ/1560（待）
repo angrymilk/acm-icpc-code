@@ -1,0 +1,96 @@
+#include <cstdio>
+#include <algorithm>
+#include <cassert>
+#include <ctime>
+
+using namespace std;
+
+const int maxn = 1e4 + 10;
+const int maxb = 30;
+
+int ch[maxn * maxb][2];
+int sum[maxn * maxb][maxb][2];
+int sz[maxn * maxb];
+int tot = 1;
+
+int get(int u, int i)
+{
+    if (!ch[u][i])
+    ch[u][i] = ++tot;
+    return ch[u][i];
+}
+
+void insert(int x)
+{
+    int rt = 1;
+    for (int i = maxb - 1; ; --i)
+    {
+        ++sz[rt];
+        for (int j = 0; j < maxb; ++j)
+            ++sum[rt][j][x >> j & 1];
+        if (i < 0)
+            break;
+        rt = get(rt, x >> i & 1);
+    }
+}
+
+long long ans;
+int s[maxb][2];
+
+const int MAGIC = 1e5;
+
+void dfs(int rt, int i, int rem, long long cur)
+{
+    static int times = 0;
+    ++times;
+    if (times > MAGIC)
+        return;
+    if (rem == 0)
+    {
+        for (; i >= 0; --i)
+            cur += (1ll << i) * max(s[i][0], s[i][1]);
+    }
+    if (i < 0)
+    {
+        ans = max(ans, cur);
+        return;
+    }
+    for (int j = 0; j < 2; ++j)
+    {
+        if (ch[rt][j] == 0)
+            continue;
+        if (sz[ch[rt][j]] > rem)
+            dfs(ch[rt][j], i - 1, rem, cur + (1ll << i) * max(rem + s[i][j], s[i][j ^ 1]));
+        else
+        {
+            for (int k = 0; k <= i; ++k)
+                for (int l = 0; l < 2; ++l)
+                    s[k][l] += sum[ch[rt][j]][k][l];
+            dfs(ch[rt][j ^ 1], i - 1, rem - sz[ch[rt][j]], cur + (1ll << i) * s[i][j]);
+            for (int k = 0; k <= i; ++k)
+                for (int l = 0; l < 2; ++l)
+                    s[k][l] -= sum[ch[rt][j]][k][l];
+        }
+    }
+}
+
+long long gcd(long long a, long long b)
+{
+    return b ? gcd(b, a % b) : a;
+}
+
+int main()
+{
+    int n, m;
+    scanf("%d %d", &n, &m);
+    for (int i = 0; i < n; ++i)
+    {
+        int x;
+        scanf("%d", &x);
+        insert(x);
+    }
+    dfs(1, maxb - 1, m, 0);
+    int g = gcd(ans, m);
+    printf("%lld/%d\n", ans / g, m / g);
+    return 0;
+}
