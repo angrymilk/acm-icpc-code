@@ -1,0 +1,75 @@
+//注意这题的数据会有重复的情况，因为会被后面的数字多次计算
+#line 5 "PowerEquation.cpp"
+#include <cstdlib>
+#include <cctype>
+#include <cstring>
+#include <cstdio>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <map>
+#include <set>
+#include <queue>
+#include <stack>
+#include <ctime>
+using namespace std;
+typedef long long ll;
+#define clr(x,a) memset(x,a,sizeof(x))
+#define sz(x) (int)x.size()
+#define see(x) cerr<<#x<<" "<<x<<endl
+#define se(x) cerr<<" "<<x
+#define pb push_back
+#define mp make_pair
+#define mod 1000000007
+ll gcd(ll a,ll b)
+{
+    if(a>b)
+        swap(a,b);
+    if(b%a==0)
+        return a;
+    return gcd(b%a,a);
+}
+
+int n,m;
+class PowerEquation
+{
+public:
+    ll count(ll n)
+    {
+        ll ans=0,cal=1;
+        for(ll i=2;i*i<=n;i++)
+        {
+            cal=i;
+            ll x=1,y=i;
+            while(y*i<=n)
+            {
+                x++;
+                y*=i;
+            }
+            for(ll j=1;j<=x;j++)
+            {
+                for(ll k=1;k<=x;k++)
+                {
+                    if(gcd(j,k)!=1)
+                        continue;
+                    ll temp=max(j/gcd(j,k),k/gcd(j,k));
+                    ans=(ans+(n/temp))%mod;
+                }
+                //ans+=n;
+            }
+        }
+        //printf("ans=%lld cal=%lld\n",ans,cal);
+        ans=(ans+n*n%mod+(n-cal)*n%mod)%mod;
+        return ans;
+    }
+
+
+};
+
+
+// Powered by FileEdit
+// Powered by TZTester 1.01 [25-Feb-2003]
+// Powered by CodeProcessor
