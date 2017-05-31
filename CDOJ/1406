@@ -1,0 +1,70 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cmath>
+#include <algorithm>
+#include <queue>
+#include <map>
+#include <set>
+#include <vector>
+#include <string>
+#include <stack>
+#include <bitset>
+#define INF 0x3f3f3f3f
+#define eps 1e-8
+#define FI first
+#define SE second
+using namespace std;
+typedef long long ll;
+
+const int mod = 1e9 + 7;
+
+int a[1 << 20];
+
+int f[2][2][1 << 20];
+
+inline void ck(int &x) {
+    if(x >= mod) x -= mod;
+}
+
+int main() {
+    int n, m;
+    scanf("%d%d", &n, &m);
+    while(m --) {
+        int c, k, s = 0;
+        scanf("%d%d", &c, &k);
+        while(k --) {
+            int x;
+            scanf("%d", &x);
+            s |= 1 << (x - 1);
+        }
+        a[s] += c;
+    }
+    for(int i = 0; i < 1 << n; ++ i) {
+        f[0][0][i] = a[i];
+    }
+    int cur = 0, pre = 1;
+    for(int i = 0; i < n; ++ i) {
+        swap(cur, pre);
+        for(int j = 0; j < 1 << n; ++ j) {
+            if(j >> i & 1) {
+                f[cur][0][j] = f[pre][1][j] + f[pre][0][j ^ (1 << i)];
+                f[cur][1][j] = f[pre][0][j] + f[pre][1][j ^ (1 << i)];
+            } else {
+                f[cur][0][j] = f[pre][0][j] + f[pre][0][j ^ (1 << i)];
+                f[cur][1][j] = f[pre][1][j] + f[pre][1][j ^ (1 << i)];
+            }
+            ck(f[cur][0][j]);
+            ck(f[cur][1][j]);
+        }
+    }
+    int ans = 0;
+    for(int i = 0; i < 1 << n; ++ i) {
+        int v = f[cur][1][i];
+        ans += (ll)v * v % mod;
+        if(ans >= mod) ans -= mod;
+    }
+    printf("%d\n", ans);
+    return 0;
+}
