@@ -1,0 +1,109 @@
+//常数有点大啊
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#define eps 0.0000000001
+#define maxn 3009
+#define inf 0x3f3f3f3f
+#define mod 1000000009
+#define ll long long
+using namespace std;
+int dp[maxn][maxn];
+int n,m,pq;
+int a[maxn];
+vector<int> b[maxn];
+queue<int> bb[maxn];
+struct ee
+{
+    int pos,v;
+    bool operator < (const ee &a)const {
+    return pos>a.pos;
+   }
+};
+int main()
+{
+    //freopen("d:\\in.txt","r",stdin);
+    scanf("%d%d%d",&n,&m,&pq);
+    for(int i=1;i<=n;i++)
+        scanf("%d",&a[i]);
+    for(int i=1;i<=m;i++)
+    {
+        int t;
+        scanf("%d",&t);
+        for(int j=1;j<=t;j++)
+        {
+            int y;
+            scanf("%d",&y);
+            b[i].push_back(y);
+        }
+    }
+    //printf("jsadfkas\n");
+    for(int i=1;i<=m;i++)
+    {
+        priority_queue<ee> q,qq;
+        int pp[maxn],p[maxn],cnt=0,pos[maxn]; //cnt用于记录现在a有几个值是在i段里面
+        for(int i=1;i<=pq;i++)
+            p[i]=0,pp[i]=0;
+        for(int j=0;j<b[i].size();j++)
+            p[b[i][j]]++;                 //记录这一段所有值得个数
+        int cal=0;
+        for(int j=1;j<=pq;j++)
+            while(!bb[j].empty())
+                 bb[j].pop();
+        for(int j=1;j<=n;j++)             //边dp转移，便进行这段序列的维护
+        {
+            cal=0;
+            dp[i][j]=max(dp[i-1][j],dp[i][j-1]);
+            if(pp[a[j]]==p[a[j]]&&p[a[j]])
+            {
+                bb[a[j]].push(j);
+                ee yu;
+                yu.pos=j;
+                yu.v=a[j];
+                q.push(yu);
+                bb[a[j]].pop();
+            }
+            else if(pp[a[j]]<p[a[j]])
+            {
+                bb[a[j]].push(j);
+                ee yu;
+                yu.pos=j;
+                yu.v=a[j];
+                q.push(yu);
+                pp[a[j]]++;
+                cnt++;
+            }
+            while(!q.empty())
+            {
+                ee r=q.top();
+                q.pop();
+                if(bb[r.v].front()>r.pos)             //这个位置已经不在维护序列的位置内
+                    continue;
+                else
+                {
+                    qq.push(r);
+                    dp[i][j]=max(dp[i-1][r.pos-1]+cnt-cal,dp[i][j]);            //转态转移
+                    //if(i==5)
+                    //printf("i=%d   j=%d   r.pos=%d    r.v=%d  dp-1=%d   %d  dp=%d\n",i,j,r.pos,r.v,dp[i-1][r.pos-1],cnt-cal,dp[i][j]);
+                    cal++;
+                }
+            }
+            while(!qq.empty())
+            {
+                ee r=qq.top();
+                q.push(r);
+                qq.pop();
+            }
+            //printf("dp[%d][%d]=%d\n",i,j,dp[i][j]);
+        }
+        while(!q.empty())
+            q.pop();
+    }
+    printf("%d\n",dp[m][n]);
+    return 0;
+}
