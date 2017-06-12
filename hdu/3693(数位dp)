@@ -1,1 +1,96 @@
-
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#define eps 0.0000000001
+#define maxn 109
+#define inf 0x3f3f3f3f
+#define mod 1000000003
+#define ll long long
+using namespace std;
+//int T,cas=1;
+ll dp[maxn][maxn][2],ans,a[maxn],k;//前i个数字，j后面可以任意放的种数，j位放k。
+int n,x[maxn][maxn];
+int main()
+{
+    //freopen("d:\\in.txt","r",stdin);
+    //freopen("d:\\inn.txt","w",stdout);
+    //scanf("%d",&T);
+    //while(cas<=T)
+    //{
+    //    cas++;
+    //}
+    ll oo=1; //有毒啊，这里用1进行位移就是wa
+    while(~scanf("%d%lld",&n,&k))
+    {
+        ans=0;
+        if(!n&&!k)
+            break;
+        memset(dp,0,sizeof(dp));
+        memset(x,0,sizeof(x));
+        for(int i=1; i<=n; i++)
+            scanf("%lld",&a[i]),a[i]++;
+        for(int i=0; i<=31; i++)
+        {
+            for(int j=1; j<=n; j++)
+            {
+                int t=0;
+                if((a[j]&(oo<<i)))
+                    t=1;
+                x[i][j]=x[i][j-1]^t;
+            }
+        }
+        for(int i=0; i<=31; i++)
+            if((a[1]&(oo<<i)))
+                dp[1][i][0]=1;
+        for(int j=1; j<n; j++)
+        {
+            for(int i=0; i<=31; i++)
+            {
+                for(int o=0; o<=31; o++)
+                {
+                    if((a[j+1]&(oo<<o)))
+                    {
+                        if(o<=i)                           //进行合并（前面固定，后面任意）
+                        {
+                            if((a[j+1]&(oo<<i))==0||o==i)
+                            {
+                                dp[j+1][i][1]=(dp[j+1][i][1]+dp[j][i][1]*1LL*(oo<<o)%mod)%mod;
+                                dp[j+1][i][0]=(dp[j+1][i][0]+dp[j][i][0]*1LL*(oo<<o)%mod)%mod;
+                            }
+                            else
+                            {
+                                dp[j+1][i][1]=(dp[j+1][i][1]+dp[j][i][0]*1LL*(oo<<o)%mod)%mod;
+                                dp[j+1][i][0]=(dp[j+1][i][0]+dp[j][i][1]*1LL*(oo<<o)%mod)%mod;
+                            }
+                        }
+                        else
+                            dp[j+1][o][x[o][j]]=(dp[j+1][o][x[o][j]]+((dp[j][i][1]+dp[j][i][0])%mod*1LL*(oo<<i))%mod)%mod;
+                    }
+                }
+            }
+        }
+        for(int i=31;i>=0;i--)
+        {
+            int yu=0,h=0;
+            if((k&(oo<<i)))
+                yu=1;
+            ans=(ans+dp[n][i][yu])%mod;
+            for(int j=1;j<=n;j++)
+            {
+                int t=0;
+                if((a[j]&(oo<<i)))
+                    t=1;
+                h^=t;
+            }
+            if(h!=yu)
+                break;
+        }
+        printf("%lld\n",ans);
+    }
+    return 0;
+}
