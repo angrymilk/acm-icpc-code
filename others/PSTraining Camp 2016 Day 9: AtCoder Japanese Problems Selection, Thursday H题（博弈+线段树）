@@ -53,7 +53,7 @@ void add(int a,int x,int vv)
 
 pair<int,int> que(int a,int l,int r,int vv)
 {
-    if(tr[a].l>=l&&tr[a].r<=r)
+    if(tr[a].l==tr[a].r)
     {
         return make_pair(tr[a].vv,tr[a].pos);
     }
@@ -81,14 +81,6 @@ int main()
         pair<int,int> op;
         op=que(1,1,i-tmp+1,tmp);
         sg[i]=op.second;
-        //printf("          i=%d sg=%d l=1  r=%d  %d  %d  %d\n",i,sg[i]-1,i-tmp+1,tmp-1,op.first,op.second);
-        //if(i==8)
-        //{
-        //    for(int ii=1;ii<=16;ii++)
-        //    {
-        //        printf("tr %d l=%d r=%d vv=%d pos=%d\n",ii,tr[ii].l,tr[ii].r,tr[ii].vv,tr[ii].pos);
-       //     }
-       // }
         add(1,sg[i],i);
         if(v[i]%2)
             ans^=(sg[i]-1);
