@@ -1,0 +1,146 @@
+//iabrother
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
+#include <map>
+#include <stack>
+#define eps 0.0000000001
+#define maxn 1009
+#define NN 202
+#define NG 20
+#define inf 0x3f3f3f3f
+#define mod 1000000009
+#define ll long long
+using namespace std;
+ll dp[NG][NN][NN];
+int f[NG][NN][NN];
+int l_f[NN][maxn],yu=0;
+ll l_dp[NN][maxn],all_sum=0;
+int str[20];
+ll sum[NN][maxn];
+ll summ[NG][NN][NN],ff[20];
+
+ll dfs(int a,int b,int c)
+{
+    ll ans=0;
+    if(dp[a][b][c]!=-1)
+        return dp[a][b][c];
+    int pre=c;
+    if(a==3)
+    {
+        ans+=l_dp[b][pre];
+        f[a][b][c]=l_f[b][pre];
+        summ[a][b][c]=sum[b][pre];
+        return dp[a][b][c]=ans;
+    }
+    for(int i=0; i<=9; i++)
+    {
+        ans+=dfs(a-1,b+i,pre);
+        summ[a][b][c]=(summ[a][b][c]+summ[a-1][b+i][pre]+dp[a-1][b+i][pre]%mod*ff[a]%mod*i%mod)%mod;
+        pre=f[a-1][b+i][pre];
+    }
+    f[a][b][c]=pre;
+    return dp[a][b][c]=ans;
+}
+
+int digcount(int a)
+{
+    int cal=1e4,an=0;
+    for(int i=1; i<=5; i++)
+        an+=a/cal,a%=cal,cal/=10;
+    return an;
+}
+
+void solve(ll tmp,int wei,int pre)
+{
+    if(wei==3)
+    {
+        all_sum=(all_sum+pre)%mod;
+        while(tmp)
+            tmp--,pre=pre+digcount(pre)+yu,all_sum=(all_sum+pre)%mod;
+        str[3]=pre/100,pre%=100;
+        str[2]=pre/10,pre%=10;
+        str[1]=pre;
+        return;
+    }
+    for(int i=0; i<=9; i++)
+    {
+        ll op=dfs(wei-1,i+yu,pre);
+        if(op>tmp)
+        {
+            str[wei]=i,yu+=i;
+            all_sum=(all_sum+i*(tmp+1)%mod*ff[wei]%mod)%mod;
+            solve(tmp,wei-1,pre);
+            break;
+        }
+        else
+        {
+            tmp-=dfs(wei-1,i+yu,pre);
+            all_sum=(all_sum+dp[wei-1][i+yu][pre]%mod*ff[wei]%mod*i%mod)%mod;
+            all_sum=(all_sum+summ[wei-1][i+yu][pre])%mod;
+            pre=f[wei-1][i+yu][pre];
+        }
+    }
+}
+
+int main()
+{
+    //freopen("d:\\in.txt","r",stdin);
+    memset(dp,-1,sizeof(dp));
+    memset(l_dp,-1,sizeof(l_dp));
+    int T;
+    scanf("%d",&T);
+    ff[1]=1;
+    for(int i=2; i<=19; i++)
+        ff[i]=ff[i-1]*10%mod;
+    for(int i=0; i<=200; i++)
+    {
+        for(int j=0; j<1000; j++)
+        {
+            if(i==0&&j==0)
+                continue;
+            int tmp=j;
+            ll op=0;
+            while(tmp<1000)
+                sum[i][j]=(sum[i][j]+tmp)%mod,tmp=i+tmp+digcount(tmp),op++;
+            l_dp[i][j]=op,l_f[i][j]=tmp-1000;
+        }
+    }
+    for(int cas=1; cas<=T; cas++)
+    {
+        yu=0;
+        ll tmp;
+        all_sum=0;
+        scanf("%lld",&tmp);
+        tmp--;
+        ll opp=tmp;
+        printf("Case #%d: ",cas);
+        if(tmp<100)
+        {
+            int pre=1,pp=1;
+            while(tmp)
+            {
+                tmp--;
+                pre=pre+digcount(pre);
+                pp+=pre;
+            }
+            printf("%d %d\n",pre,pp);
+            continue;
+        }
+        solve(tmp,19,1);
+        int fff=0;
+        for(int i=19; i>=1; i--)
+        {
+            if(str[i]==0&&fff==0)
+                continue;
+            fff=1;
+            printf("%d",str[i]);
+        }
+        printf(" %lld\n",all_sum%mod);
+    }
+    return 0;
+}
